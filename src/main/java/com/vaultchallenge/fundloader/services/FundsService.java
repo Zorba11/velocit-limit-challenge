@@ -7,59 +7,62 @@ import org.joda.money.Money;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.format.DateTimeFormatterBuilder;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 @Service
 public class FundsService {
-    private HashMap<Customer, List<FundPayload>> processedRequests = new HashMap<>();
-    private Customer customer;
-    private FundPayload fundPayload;
+    private HashMap<String, List<FundPayload>> processedRequests = new HashMap<>();
 
-    public String loadFunds(Queue<JsonNode> loadQueue) {
-        var request = loadQueue.remove();
-        var requestJSON = request.toPrettyString();
+    Customer customer = new Customer();
 
-        System.out.println(requestJSON);
 
-        setCustomerValues(request);
-        setFundPayloads(request);
-//        if(!request.at("/id").isEmpty())
+    public String loadFunds(Queue<Map<String, String>> loadQueue) {
+        while(!loadQueue.isEmpty()) {
+            var request = loadQueue.remove();
 
+            FundPayload payload = new FundPayload();
+            buildFundPayload(payload, request);
+
+            addToProcessedRequests(request, payload);
+        }
 
 
         return null;
     }
 
-    private void setCustomerValues(JsonNode request) {
-        var amount = Money.parse("USD 23.87");
-        var customerId = String.valueOf(request.at("/customer_id"));
 
-        System.out.println(amount);
+    private void addToProcessedRequests(Map<String, String> request, FundPayload payload) {
+        if(processedRequests.containsKey(request.get("customer_id"))) {
+            var payloadList = processedRequests.get(request.get("customer_id"));
+            payloadList.add(payload);
+            processedRequests.put(request.get("customer_id"), payloadList);
+        } else {
+            List<FundPayload> newPayloadList = new ArrayList<>();
+            newPayloadList.add(payload);
+            processedRequests.put(request.get("customer_id"), newPayloadList);
+        }
+    }
 
-        customer.setId(customerId);
-        customer.setFundsLoadedToday(amount);
-        customer.setFundsLoadedThisWeek(amount);
-        customer.setNumberOfLoadsToday(customer.getNumberOfLoadsToday() + 1);
+    private void updateCustomerData(Customer customer, Map<String, String> request) {
+//        var amount = Money.parse(request.get("load_amount").replace("$", "USD "));
+//
+//        customer.setId(request.get("customer_id"));
+//        customer.setFundsLoadedToday(amount);
+//        customer.setFundsLoadedThisWeek(amount);
+//        customer.setNumberOfLoadsToday(customer.getNumberOfLoadsToday() + 1);
 
     }
 
-    private void setFundPayloads(JsonNode request) {
-//        var amount = Money.parse(String.valueOf(request.at("/load_amount")));
-        var dateTime = String.valueOf(request.at("/time"));
+    private void buildFundPayload(FundPayload fundPayload, Map<String, String> request) {
+        var amount = Money.parse(request.get("load_amount").replace("$", "USD "));
+        var time = Instant.parse(request.get("time"));
 
-        var formatedDateTime = new SimpleDateFormat("MM/dd/yyyy KK:mm:ss a Z").format(dateTime);
-
-        System.out.println(dateTime);
-        System.out.println(formatedDateTime);
-
-
-        fundPayload.setId(String.valueOf(request.at("/id")));
-        fundPayload.setCustomerId(String.valueOf(request.at("/customer_id")));
-//        fundPayload.setLoadAmount(amount);
-//        fundPayload.setRequestAt();
+        fundPayload.setId(request.get("id"));
+        fundPayload.setCustomerId(request.get("customer_id"));
+        fundPayload.setLoadAmount(amount);
+        fundPayload.setRequestedAtUTC(time);
 
     }
 }

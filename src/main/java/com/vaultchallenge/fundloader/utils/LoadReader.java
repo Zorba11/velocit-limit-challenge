@@ -11,20 +11,20 @@ import java.util.Map;
 import java.util.Queue;
 
 public class LoadReader {
-    private Queue<JsonNode> fundLoadQueue = new ArrayDeque<>();
+    private Queue<Map<String, String>> fundLoadQueue = new ArrayDeque<Map<String, String>>();
     private ObjectMapper mapper = new ObjectMapper();
     private String fundInputsURI = "src/inputs/input.txt";
     private String fundLoadString;
 
     @SneakyThrows
-    public Queue<JsonNode> readInput() {
+    public Queue<Map<String, String>> readInput() {
         try {
             BufferedReader br = new BufferedReader(new FileReader(fundInputsURI));
             while((fundLoadString = br.readLine()) != null) {
                 JsonNode loadRequest = mapper.readTree(fundLoadString);
-//                Map<String, Object> result = mapper.convertValue(loadRequest, new TypeReference<Map<String, Object>>(){});
+                Map<String, String> result = mapper.convertValue(loadRequest, new TypeReference<Map<String, String>>(){});
                 if(loadRequest.has("id"))
-                    fundLoadQueue.add(loadRequest);
+                    fundLoadQueue.add(result);
             }
         } catch (FileNotFoundException e ) {
             e.printStackTrace();
