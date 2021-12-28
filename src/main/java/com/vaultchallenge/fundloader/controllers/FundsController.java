@@ -22,7 +22,7 @@ public class FundsController {
     public String loadFunds() {
         var reader = new LoadReader();
         var fundLoadQueue = reader.readInput();
-//        System.out.println(fundLoadQueue);
+
         fundsService.loadFunds(fundLoadQueue);
 
         return "loaded";

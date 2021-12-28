@@ -5,8 +5,7 @@ import org.joda.money.Money;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.*;
 
 @Getter
 @Setter
@@ -17,5 +16,12 @@ public class FundPayload {
     private String id;
     private String customerId;
     private Money loadAmount;
-    private Instant requestedAtUTC;
+    private ZonedDateTime requestedAtUTC;
+    private Integer requestedAtYear;
+    private Month requestedOnMonth;
+    private Integer requestedOnDay;
+    private DayOfWeek dayOfWeek;
+    private Integer requestedAtHour;
+    private Integer requestedAtMinute;
+    private Integer requestAtSecond;
 }

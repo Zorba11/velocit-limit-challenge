@@ -1,5 +1,7 @@
-{"id":"15887","customer_id":"528","load_amount":"$3318.47","time":"2000-01-01T00:00:00Z"}
-{"id":"15887","customer_id":"528","load_amount":"$3318.47","time":"2000-01-01T00:00:00Z"}
+{"id":"15887","customer_id":"528","load_amount":"$33.47","time":"2000-01-01T00:00:00Z"}
+{"id":"15887","customer_id":"528","load_amount":"$33.47","time":"2000-01-01T00:00:00Z"}
+{"id":"15889","customer_id":"528","load_amount":"$3318.47","time":"2000-01-01T00:00:00Z"}
+{"id":"15890","customer_id":"528","load_amount":"$3318.47","time":"2000-01-01T00:00:00Z"}
 {"id":"30081","customer_id":"154","load_amount":"$1413.18","time":"2000-01-01T01:01:22Z"}
 {"id":"26540","customer_id":"426","load_amount":"$404.56","time":"2000-01-01T02:02:44Z"}
 {"id":"10694","customer_id":"1","load_amount":"$785.11","time":"2000-01-01T03:04:06Z"}
