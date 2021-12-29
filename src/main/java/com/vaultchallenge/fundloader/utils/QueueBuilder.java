@@ -30,6 +30,7 @@ public class QueueBuilder {
             }
         } catch (FileNotFoundException e ) {
             e.printStackTrace();
+            throw new FileNotFoundException();
         }
         return fundLoadQueue;
     }
