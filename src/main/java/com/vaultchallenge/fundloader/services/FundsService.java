@@ -26,7 +26,7 @@ public class FundsService {
 
     private String fundInputsURI = "src/inputs/input.txt";
 
-    public void processLoadRequests() throws IOException {
+    public String processLoadRequests() throws IOException {
         var loadQueue = buildQueue();
 
         while(!loadQueue.isEmpty()) {
@@ -58,8 +58,9 @@ public class FundsService {
             bw.close();
 
             log.info("loadId: " + payload.getId() + " status: output written, message: output written to file");
-
         }
+
+        return "Queue processed !";
     }
 
     private LoadResult loadFunds(Map<String, String> request, FundPayload payload) {

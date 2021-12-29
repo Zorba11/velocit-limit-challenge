@@ -1,8 +1,12 @@
 package com.vaultchallenge.fundloader.controllers;
 
+import com.vaultchallenge.fundloader.exceptions.EmptyInputException;
 import com.vaultchallenge.fundloader.services.FundsService;
 import com.vaultchallenge.fundloader.utils.VerifyOutput;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,14 +23,17 @@ public class FundsController {
     VerifyOutput verifyOutput = new VerifyOutput();
 
     @GetMapping
-    public String loadFunds() throws IOException {
-        fundsService.processLoadRequests();
+    @ExceptionHandler(EmptyInputException.class)
+    public ResponseEntity<String> loadFunds() throws IOException {
 
-        return "Queue processed !";
+        var loadResult = fundsService.processLoadRequests();
+
+        return new ResponseEntity<>(loadResult, HttpStatus.OK);
     }
 
     @GetMapping("/verify")
-    public String verifyOutput() {
-        return verifyOutput.verifyOutputs();
+    public ResponseEntity<String> verifyOutput() {
+        var result = verifyOutput.verifyOutputs();
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 }
