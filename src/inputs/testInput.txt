@@ -1,0 +1,8 @@
+{"id":"27137","customer_id":"52","load_amount":"$431.33","time":"2000-01-02T03:36:54Z"}
+{"id":"27138","customer_id":"52","load_amount":"$531.33","time":"2000-01-02T03:36:54Z"}
+{"id":"27139","customer_id":"52","load_amount":"$631.33","time":"2000-01-02T03:36:54Z"}
+{"id":"27140","customer_id":"52","load_amount":"$731.33","time":"2000-01-02T03:36:54Z"}
+{"id":"27141","customer_id":"52","load_amount":"$5431.33","time":"2000-01-02T03:36:54Z"}
+{"id":"27142","customer_id":"52","load_amount":"$4885.82","time":"2000-01-02T13:50:34Z"}
+
+

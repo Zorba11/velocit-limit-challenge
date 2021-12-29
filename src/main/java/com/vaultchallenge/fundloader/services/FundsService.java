@@ -1,17 +1,22 @@
 package com.vaultchallenge.fundloader.services;
 
-import com.vaultchallenge.fundloader.models.Customer;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.vaultchallenge.fundloader.models.FundPayload;
 import com.vaultchallenge.fundloader.models.LoadResult;
+import com.vaultchallenge.fundloader.utils.QueueBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.joda.money.Money;
 import org.springframework.stereotype.Service;
-
+import java.io.*;
 import java.time.DayOfWeek;
 import java.time.Month;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class FundsService {
     private HashMap<String, Set<FundPayload>> processedRequests = new HashMap<>();
@@ -19,46 +24,55 @@ public class FundsService {
     private static final Money WEEKLY_LIMIT = Money.parse("USD 20000");
     private static final Integer DAILY_LOAD_FREQUENCY_LIMIT = 3;
 
-//    public void processedRequests(Queue<Map<String, String>> loadQueue) {
-//        while(!loadQueue.isEmpty()) {
-//            var request = loadQueue.remove();
-//            Boolean duplicateFound = false;
-//            FundPayload payload = new FundPayload();
-//            buildFundPayload(payload, request);
-//
-//            if(!processedRequests.isEmpty())
-//                if(duplicateLoad(payload)) continue;
-//
-//            loadFunds(payload);
-//
-//
-//
-//        }
-//    }
+    private String fundInputsURI = "src/inputs/input.txt";
 
-    public void loadFunds(Queue<Map<String, String>> loadQueue) {
-        var loadResult = new LoadResult();
+    public void processLoadRequests() throws IOException {
+        var loadQueue = buildQueue();
+
         while(!loadQueue.isEmpty()) {
             var request = loadQueue.remove();
-            Boolean duplicateFound = false;
-
             FundPayload payload = new FundPayload();
             buildFundPayload(payload, request);
 
+            log.info("loadId: " + payload.getId() + " status: processing" );
+
             if(!processedRequests.isEmpty())
-                if(duplicateLoad(payload)) continue;
+                if(duplicateLoad(payload)) {
+                    log.info("loadId: " + payload.getId() + " status: ignoring, message: duplicate found");
+                    continue;
+                }
+
+            var loadResult = loadFunds(request, payload);
+
+            log.info("loadId: " + payload.getId() + " status: processed, message: " + loadResult.getAccepted());
+
+            if(loadResult.getAccepted())
+                addToProcessedRequests(request, payload);
+
+            log.info("loadId: " + payload.getId() + " status: added to processed queue");
+
+            var loadResultJson = buildJsonString(loadResult);
+
+            BufferedWriter bw = new BufferedWriter(new FileWriter("src/outputs/output.txt", true));
+            bw.write(loadResultJson + "\n");
+            bw.close();
+
+            log.info("loadId: " + payload.getId() + " status: output written, message: output written to file");
+
+        }
+    }
+
+    private LoadResult loadFunds(Map<String, String> request, FundPayload payload) {
+        var loadResult = new LoadResult();
 
             var requestIsValid = validateLoadRequest(payload);
             loadResult.setId(payload.getId());
-            loadResult.setCustomerId(payload.getCustomerId());
+            loadResult.setCustomer_id(payload.getCustomerId());
 
             if(requestIsValid)
                 loadResult.setAccepted(true);
              else
                 loadResult.setAccepted(false);
-
-            addToProcessedRequests(request, payload);
-        }
 
         return loadResult;
     }
@@ -68,21 +82,27 @@ public class FundsService {
         Boolean loadAccepted = false;
         var customerPayloads = processedRequests.get(fundPayload.getCustomerId());
 
-        if(customerPayloads != null) {
+        if(customerPayloads == null) {
+            customerPayloads = new HashSet<FundPayload>();
+        }
+
             if (dailyLoadFrequencyReached(customerPayloads, fundPayload)) {
                 loadAccepted = false;
+                log.info("loadId: " + fundPayload.getId() + " status: load denied, message: daily load frequency reached");
             } else {
                 if (dailyLoadLimitReached(customerPayloads, fundPayload)) {
                     loadAccepted = false;
+                    log.info("loadId: " + fundPayload.getId() + " status: load denied, message: daily fund load limit reached");
                 } else {
                     if (weeklyLoadLimitReached(customerPayloads, fundPayload)) {
                         loadAccepted = false;
+                        log.info("loadId: " + fundPayload.getId() + " status: load denied, message: weekly fund load limit reached");
                     } else {
                         loadAccepted = true;
+                        log.info("loadId: " + fundPayload.getId() + " status: load approved, message: load validated");
                     }
                 }
             }
-        }
 
         return loadAccepted;
     }
@@ -180,7 +200,9 @@ public class FundsService {
 
     private Boolean duplicateLoad(FundPayload fundPayload) {
         var previousLoads = processedRequests.get(fundPayload.getCustomerId());
-
+        if(previousLoads == null)
+            return false;
+        else
         return previousLoads.stream()
                 .filter(payload -> payload.getId().equals(fundPayload.getId()))
                 .count() > 0;
@@ -200,20 +222,9 @@ public class FundsService {
         }
     }
 
-    private void updateCustomerData(Customer customer, Map<String, String> request) {
-//        var amount = Money.parse(request.get("load_amount").replace("$", "USD "));
-//
-//        customer.setId(request.get("customer_id"));
-//        customer.setFundsLoadedToday(amount);
-//        customer.setFundsLoadedThisWeek(amount);
-//        customer.setNumberOfLoadsToday(customer.getNumberOfLoadsToday() + 1);
-
-    }
-
     private void buildFundPayload(FundPayload fundPayload, Map<String, String> request) {
         var amount = Money.parse(request.get("load_amount").replace("$", "USD "));
         var time = ZonedDateTime.parse(request.get("time"));
-
 
         fundPayload.setId(request.get("id"));
         fundPayload.setCustomerId(request.get("customer_id"));
@@ -223,8 +234,17 @@ public class FundsService {
         fundPayload.setRequestedOnMonth(time.getMonth());
         fundPayload.setRequestedOnDay(time.getDayOfMonth());
         fundPayload.setDayOfWeek(time.getDayOfWeek());
-        fundPayload.setRequestedAtHour(time.getHour());
-        fundPayload.setRequestAtSecond(time.getSecond());
-        fundPayload.setRequestedAtMinute(time.getMinute());
+    }
+
+    private String buildJsonString(LoadResult loadResult) throws JsonProcessingException {
+        ObjectWriter ow = new ObjectMapper().writer();
+        String loadResultJson = ow.writeValueAsString(loadResult);
+        return loadResultJson;
+    }
+
+    private Queue<Map<String, String>> buildQueue() {
+        var builder = new QueueBuilder();
+
+        return builder.buildQueueFromFile(fundInputsURI);
     }
 }

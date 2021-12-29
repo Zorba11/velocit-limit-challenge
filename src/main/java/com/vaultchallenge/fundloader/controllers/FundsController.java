@@ -1,15 +1,13 @@
 package com.vaultchallenge.fundloader.controllers;
 
 import com.vaultchallenge.fundloader.services.FundsService;
-import com.vaultchallenge.fundloader.utils.LoadReader;
-import org.apache.tomcat.jni.File;
+import com.vaultchallenge.fundloader.utils.VerifyOutput;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.*;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("api/v1/loadfunds")
@@ -18,13 +16,17 @@ public class FundsController {
     @Autowired
     private FundsService fundsService;
 
+    VerifyOutput verifyOutput = new VerifyOutput();
+
     @GetMapping
-    public String loadFunds() {
-        var reader = new LoadReader();
-        var fundLoadQueue = reader.readInput();
+    public String loadFunds() throws IOException {
+        fundsService.processLoadRequests();
 
-        fundsService.loadFunds(fundLoadQueue);
+        return "Queue processed !";
+    }
 
-        return "loaded";
+    @GetMapping("/verify")
+    public String verifyOutput() {
+        return verifyOutput.verifyOutputs();
     }
 }

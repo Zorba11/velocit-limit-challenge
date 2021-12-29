@@ -8,9 +8,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class LoadResult {
 
     private String id;
-    private String customerId;
+    private String customer_id;
     private Boolean accepted;
 }

@@ -2,9 +2,6 @@ package com.vaultchallenge.fundloader.models;
 
 import lombok.*;
 import org.joda.money.Money;
-
-import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.time.*;
 
 @Getter
@@ -21,7 +18,4 @@ public class FundPayload {
     private Month requestedOnMonth;
     private Integer requestedOnDay;
     private DayOfWeek dayOfWeek;
-    private Integer requestedAtHour;
-    private Integer requestedAtMinute;
-    private Integer requestAtSecond;
 }
